@@ -48,7 +48,6 @@ class PlayersController extends Controller
     {
         $newId = Player::insertGetId(    // 送られてきたデータに沿ってカラムを新規作成
             [
-            'id'=>$request->id,
             'name'=>$request->name,
             'hp'=>$request->hp,
             'mp'=>$request->mp,
@@ -57,7 +56,6 @@ class PlayersController extends Controller
         );
 
         // JSONレスポンスとしてidを返す
-        // 課題概要の仕様通りresponseはJSON形式で{id:1}
         return response()->json(['id'=>$newId]);
     }
 
