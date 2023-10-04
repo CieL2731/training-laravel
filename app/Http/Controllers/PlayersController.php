@@ -32,7 +32,10 @@ class PlayersController extends Controller
      */
     public function show($id)
     {
-        //
+        return new Response(
+            Player::query()
+                ->find($id) // 指定したIDに一致するプレイヤーを取得
+        );
     }
 
     /**
@@ -43,7 +46,17 @@ class PlayersController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $newId = Player::insertGetId(    // 送られてきたデータに沿ってカラムを新規作成
+            [
+            'name'=>$request->name,
+            'hp'=>$request->hp,
+            'mp'=>$request->mp,
+            'money'=>$request->money,
+            ]
+        );
+
+        // JSONレスポンスとしてidを返す
+        return response()->json(['id'=>$newId]);
     }
 
     /**
@@ -55,7 +68,11 @@ class PlayersController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        Player::Where('id',$id) // 指定したIDに一致するプレイヤーを検索
+        ->update($request->all());   // 送られてきたデータに沿って指定されたIDのカラムを更新
+
+        // UP DATEが完了したらJSONレスポンスを返す
+        return response()->json(['update complete.']);
     }
 
     /**
@@ -66,7 +83,11 @@ class PlayersController extends Controller
      */
     public function destroy($id)
     {
-        //
+        Player::where('id',$id) // 指定したIDに一致するプレイヤーを検索
+        ->delete(); // 削除
+
+        // DELETEが完了したらJSONレスポンスを返す
+        return response()->json(['delete complete.']);
     }
 
     /**
