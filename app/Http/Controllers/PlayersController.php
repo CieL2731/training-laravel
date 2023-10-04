@@ -34,9 +34,7 @@ class PlayersController extends Controller
     {
         return new Response(
             Player::query()
-                ->where('id','=',$id) // 指定したIDに一致するプレイヤーを検索
-                ->select(['id', 'name', 'hp', 'mp', 'money']) // 指定したカラムを選択
-                ->get() // 結果を取得
+                ->find($id) // 指定したIDに一致するプレイヤーを取得
         );
     }
 
@@ -48,19 +46,19 @@ class PlayersController extends Controller
      */
     public function store(Request $request)
     {
-
-        Player::insertGetid(    // 送られてきたデータに沿ってカラムを新規作成
+        $newId = Player::insertGetId(    // 送られてきたデータに沿ってカラムを新規作成
             [
             'id'=>$request->id,
             'name'=>$request->name,
             'hp'=>$request->hp,
             'mp'=>$request->mp,
             'money'=>$request->money,
-        ]
+            ]
         );
 
         // JSONレスポンスとしてidを返す
-        return response()->json(['id' => $request->id]);
+        // 課題概要の仕様通りresponseはJSON形式で{id:1}
+        return response()->json(['id'=>$newId]);
     }
 
     /**
@@ -72,15 +70,8 @@ class PlayersController extends Controller
      */
     public function update(Request $request, $id)
     {
-        Player::Where('id','=',$id) // 指定したIDに一致するプレイヤーを検索
-        ->update(   // 送られてきたデータに沿って指定されたIDのカラムを更新
-            [
-            'name'=>$request->name,
-            'hp'=>$request->hp,
-            'mp'=>$request->mp,
-            'money'=>$request->money,
-        ]
-        );
+        Player::Where('id',$id) // 指定したIDに一致するプレイヤーを検索
+        ->update($request->all());   // 送られてきたデータに沿って指定されたIDのカラムを更新
 
         // UP DATEが完了したらJSONレスポンスを返す
         return response()->json(['update complete.']);
@@ -94,7 +85,7 @@ class PlayersController extends Controller
      */
     public function destroy($id)
     {
-        Player::where('id','=',$id) // 指定したIDに一致するプレイヤーを検索
+        Player::where('id',$id) // 指定したIDに一致するプレイヤーを検索
         ->delete(); // 削除
 
         // DELETEが完了したらJSONレスポンスを返す
