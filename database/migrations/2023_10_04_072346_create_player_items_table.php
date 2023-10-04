@@ -21,7 +21,7 @@ class CreatePlayerItemsTable extends Migration
             // 複合主キーの設定
             $table->primary(['player_id', 'item_id']);
 
-            $table->integer('itemCount')->comment("アイテムの所持数");
+            $table->integer('item_count')->comment("アイテムの所持数");
         });
     }
 
