@@ -41,7 +41,10 @@ class ItemController extends Controller
         // データが存在するかどうかを確認し、カラムを追加または更新
         if ($playerItem) {
             // データが存在する場合、item_countを加算
-            $playerItem::increment('item_count',$count);
+            $playerItem::increment('item_count', $count);
+
+            // アイテムIDと所持数が加算後のレスポンスを返す
+            return response()->json(['itemId' => $itemId, 'count' => $playerItem->item_count + $count]);
         } 
         else {
             // データが存在しない場合、新しいカラムを作成
@@ -50,9 +53,11 @@ class ItemController extends Controller
                 'item_id'=>$itemId,
                 'item_count'=>$count
             ]);
+
+            // 追加されたアイテムID、所持数のレスポンスを返す
+            return response()->json(['itemId' => $itemId, 'count' => $count]);
         }
 
-        // 成功のレスポンスを返す
-        return response()->json(['itemId' => $itemId, 'count' => $playerItem->item_count + 1]);
+
     }
 }
