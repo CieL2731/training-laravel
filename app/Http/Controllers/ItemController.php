@@ -26,7 +26,7 @@ class ItemController extends Controller
         // リクエストからデータを取得
         $itemId = $request->input('itemId');
         $count = $request->input('count');
-        
+
         // プレイヤーIDからプレイヤーを取得
         $player = Player::find($id);
 
@@ -40,8 +40,10 @@ class ItemController extends Controller
 
         // データが存在するかどうかを確認し、カラムを追加または更新
         if ($playerItem) {
-            // データが存在する場合、item_countを加算
-            $playerItem::increment('item_count', $count);
+            // プレイヤーIDとアイテムIDを参照し、item_countを加算
+            PlayerItems::where('player_id', $player->id)
+            ->where('item_id', $item->id)
+            ->update(['item_count'=>$playerItem->item_count + $count]);
 
             // アイテムIDと所持数が加算後のレスポンスを返す
             return response()->json(['itemId' => $itemId, 'count' => $playerItem->item_count + $count]);
@@ -57,7 +59,5 @@ class ItemController extends Controller
             // 追加されたアイテムID、所持数のレスポンスを返す
             return response()->json(['itemId' => $itemId, 'count' => $count]);
         }
-
-
     }
 }
