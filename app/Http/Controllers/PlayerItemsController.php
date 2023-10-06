@@ -60,4 +60,92 @@ class PlayerItemsController extends Controller
             return response()->json(['itemId' => $itemId, 'count' => $count]);
         }
     }
+
+    /**
+     * Update resources using items.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function use_item(Request $request, $id)
+    {
+        // リクエストからデータを取得
+        $itemId = $request->input('itemId');
+        $count = $request->input('count');
+
+        // プレイヤーIDからプレイヤーを取得
+        $player = Player::find($id);
+
+        // アイテムIDからアイテムを取得
+        $item = Item::find($itemId);
+
+        // PlayerItemsテーブルから対応するデータを取得
+        $playerItem = PlayerItems::where('player_id', $player->id)
+            ->where('item_id', $item->id)
+            ->first();
+
+        // データがないか、アイテムを所持していない場合、エラーレスポンスを返す
+        if (!$playerItem || $playerItem->item_count <= 0) {
+            return response()->json(['error' => 'アイテムを持っていません。'], 400);
+        }
+
+        if($itemId == 1){
+            // hpが上限の200の場合何もしない
+            if($player->hp == 200){
+                return response()->json(['HPが満タンです！'], 200);
+            }
+
+            // アイテムIDが1の時はhpに加算
+            $player->hp += $item->value * $count;    // プレイヤーのhpにitemのvalue*count分加算
+            $player->save(); // プレイヤーの変更を保存
+
+            // 200を越えた場合上限値200に補正
+            if($player->hp >= 200)
+            {
+                $player->hp = 200;
+                $player->save(); // プレイヤーの変更を保存
+            }
+
+        }
+        else if($itemId == 2){
+            // mpが上限の200の場合何もしない
+            if($player->mp == 200){
+                return response()->json(['MPが満タンです！'], 200);
+            }
+
+            // アイテムIDが2の時はmpに加算
+            $player->mp += $item->value * $count;    // プレイヤーのmpにitemのvalue*count分加算
+            $player->save(); // プレイヤーの変更を保存
+
+            // 200を越えた場合上限値200に補正
+            if($player->mp >= 200)
+            {
+                $player->mp = 200;
+                $player->save(); // プレイヤーの変更を保存
+            }
+
+        }
+
+        // 使用したアイテムの個数分item_countを減算
+        PlayerItems::where('player_id', $player->id)
+        ->where('item_id', $item->id)
+        ->update(['item_count'=>$playerItem->item_count - $count]);
+
+        // 各カラムのデータレスポンスを返す
+        return response()
+        ->json(
+            [
+            'itemId' => $itemId,
+            'count'  => $playerItem->item_count - $count,
+
+            'player'=>
+            [
+            'id' => $id,
+            'hp' => $player->hp,
+            'mp' => $player->mp,
+            ]
+            ]
+        );
+    }
 }
