@@ -96,8 +96,20 @@ class PlayerItemsController extends Controller
                 return response()->json(['HPが満タンです！'], 200);
             }
 
+            // 上限以上回復しようとした場合使用個数を補正
+            $nowhp = $player->hp;   // 現在のHPを取得
+            $curehp = 200 - $nowhp; // 回復できる量を取得
+            for($usecount = 1; $usecount<$count; $usecount++){
+                // 回復できる量に対して使える最大数を取得 
+                $curehp = $curehp - $item->value;
+                if($curehp <= 0){
+                    // 使える最大数になったらループを抜ける
+                    break;
+                }
+            }
+
             // アイテムIDが1の時はhpに加算
-            $player->hp += $item->value * $count;    // プレイヤーのhpにitemのvalue*count分加算
+            $player->hp += $item->value * $usecount;    // プレイヤーのhpにitemのvalue*count分加算
             $player->save(); // プレイヤーの変更を保存
 
             // 200を越えた場合上限値200に補正
@@ -114,13 +126,25 @@ class PlayerItemsController extends Controller
                 return response()->json(['MPが満タンです！'], 200);
             }
 
+            // 上限以上回復しようとした場合使用個数を補正
+            $nowmp = $player->mp;   // 現在のHPを取得
+            $curemp = 200 - $nowmp; // 回復できる量を取得
+            for($usecount = 1; $usecount<$count; $usecount++){
+                // 回復できる量に対して使える最大数を取得 
+                $curemp = $curemp - $item->value;
+                if($curemp <= 0){
+                    // 使える最大数になったらループを抜ける
+                    break;
+                    }
+            }
+
             // アイテムIDが2の時はmpに加算
-            $player->mp += $item->value * $count;    // プレイヤーのmpにitemのvalue*count分加算
+            $player->mp += $item->value * $usecount;    // プレイヤーのmpにitemのvalue*count分加算
             $player->save(); // プレイヤーの変更を保存
 
             // 200を越えた場合上限値200に補正
             if($player->mp >= 200)
-            {
+            {   
                 $player->mp = 200;
                 $player->save(); // プレイヤーの変更を保存
             }
@@ -130,14 +154,14 @@ class PlayerItemsController extends Controller
         // 使用したアイテムの個数分item_countを減算
         PlayerItems::where('player_id', $player->id)
         ->where('item_id', $item->id)
-        ->update(['item_count'=>$playerItem->item_count - $count]);
+        ->update(['item_count'=>$playerItem->item_count - $usecount]);
 
         // 各カラムのデータレスポンスを返す
         return response()
         ->json(
             [
             'itemId' => $itemId,
-            'count'  => $playerItem->item_count - $count,
+            'count'  => $playerItem->item_count - $usecount,
 
             'player'=>
             [
