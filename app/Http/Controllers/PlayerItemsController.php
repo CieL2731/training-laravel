@@ -172,4 +172,117 @@ class PlayerItemsController extends Controller
             ]
         );
     }
+
+    /**
+     * Obtain items using gacha.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function use_gacha(Request $request, $id)
+    {
+        // ガチャ一回分の使用金額を設定
+        $gachaprice = 10;
+
+        // リクエストから回数を取得
+        $count = $request->input('count');
+
+        // 使用金額を取得
+        $usemoney = $count * $gachaprice;
+
+        // プレイヤーIDからプレイヤーを取得
+        $player = Player::find($id);
+
+        // アイテムのデータを取得
+        // idが1のデータを取得してitemAに格納
+        $itemA = Item::find(1);
+
+        // idが2のデータを取得してitemBに格納
+        $itemB = Item::find(2);
+
+        // ガチャの結果を初期化
+        $results = [];
+
+        // 所持金が不足していればエラー
+        if($player->money < $usemoney){
+            return response()->json(['error' => '所持金が足りません！'], 400);
+        }
+
+        // ガチャを指定回数引く
+        for ($i = 0; $i < $count; $i++) {
+            // 0から100の乱数を生成
+            $rand = mt_rand(0, 100); 
+
+            // ランダムにアイテムを選択
+            $item = null;
+            if($itemA->percent >= $rand){
+                // 生成された乱数がアイテムAより小さかった場合
+                $item = $itemA;
+            }
+            else{
+                // アイテムAより大きかった場合パーセントの値分引いて次へ
+                $rand -= $itemA->percent;
+            }
+
+            if($itemB->percent >= $rand && $item == null){
+                // 生成された乱数がアイテムBより小さかった場合
+                $item = $itemB;
+            }
+            // ここまでで該当しなければハズレ
+            
+            if($item){
+            // アイテムが選択されていればプレイヤーの所持アイテムに追加
+            $playerItem = PlayerItems::where('player_id', $player->id)
+            ->where('item_id', $item->id)
+            ->first();
+
+            if ($playerItem) {
+                // すでに同じアイテムを持っていれば値を加算
+                PlayerItems::where('player_id', $player->id)
+                ->where('item_id', $item->id)
+                ->update(['item_count'=>$playerItem->item_count + 1]);
+            }
+            else{
+                // 選択されたアイテムを未所持の場合はカラムを作成
+                 PlayerItems::insert([
+                     'player_id'=>$player->id,
+                     'item_id'=>$item->id,
+                     'item_count'=>1
+                    ]);
+                }
+             
+            // 結果にアイテムを追加
+            $results[] = 
+                [
+                'itemId' => $item->id,
+                'count' => 1,
+                ];
+             }
+             else{
+                // アイテムが未選択の場合
+                $results[] = 
+                [
+                'ハズレ'
+                ];
+             }
+        }
+
+       // プレイヤーの所持金を更新
+       $player->money -= $usemoney;
+       $player->save();
+
+       // レスポンスデータを作成
+       $response = [
+           'results' => $results,
+           'player' => [
+               'money' => $player->money,
+               'items' => PlayerItems::where('player_id', $player->id)
+                          ->select('item_id', 'item_count')->get(),
+           ],
+       ];
+
+       // 作成したレスポンスデータをレスポンス
+        return response()->json($response);
+    }
 }
