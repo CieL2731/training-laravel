@@ -203,8 +203,8 @@ class PlayerItemsController extends Controller
 
         // ガチャの結果を初期化
         $results = [];
-        $getitemA = null;
-        $getitemB = null;
+        $getitemA = 0;
+        $getitemB = 0;
 
         // 所持金が不足していればエラー
         if($player->money < $usemoney){
@@ -276,7 +276,7 @@ class PlayerItemsController extends Controller
        // アイテムが未選択の場合
        $results[] = 
        [
-       'ハズレ' => $count - ($getitemA + $getitemB)
+       'none' => $count - ($getitemA + $getitemB)
        ];
 
        // レスポンスデータを作成
