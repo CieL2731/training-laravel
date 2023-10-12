@@ -212,7 +212,7 @@ class PlayerItemsController extends Controller
         // ガチャを指定回数引く
         for ($i = 0; $i < $count; $i++) {
             // 0から100の乱数を生成
-            $rand = mt_rand(0, 100); 
+            $rand = mt_rand(1, 100); 
 
             // ランダムにアイテムを選択
             $item = null;
