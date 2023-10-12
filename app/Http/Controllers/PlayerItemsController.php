@@ -285,7 +285,8 @@ class PlayerItemsController extends Controller
            'player' => [
                'money' => $player->money,
                'items' => PlayerItems::where('player_id', $player->id)
-                          ->select('item_id', 'item_count')->get(),
+                          ->select('item_id as itemId', 'item_count as count')
+                          ->get(),
            ],
        ];
 
