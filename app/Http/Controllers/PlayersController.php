@@ -106,9 +106,7 @@ class PlayersController extends Controller
      */
     public function destroy($id)
     {
-
-
-
+        DB::beginTransaction(); // トランザクション開始
 
         try {// エラーが発生すればcatchへ
             Player::where('id',$id) // 指定したIDに一致するプレイヤーを検索
