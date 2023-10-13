@@ -7,6 +7,7 @@ use App\Models\Player;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PlayersController extends Controller
 {
@@ -46,17 +47,27 @@ class PlayersController extends Controller
      */
     public function store(Request $request)
     {
-        $newId = Player::insertGetId(    // 送られてきたデータに沿ってカラムを新規作成
-            [
-            'name'=>$request->name,
-            'hp'=>$request->hp,
-            'mp'=>$request->mp,
-            'money'=>$request->money,
-            ]
-        );
+        DB::beginTransaction(); // トランザクション開始
 
-        // JSONレスポンスとしてidを返す
-        return response()->json(['id'=>$newId]);
+        try {// エラーが発生すればcatchへ
+            $newId = Player::insertGetId([// 送られてきたデータに沿ってカラムを新規作成
+                'name' => $request->name,
+                'hp' => $request->hp,
+                'mp' => $request->mp,
+                'money' => $request->money,
+            ]);
+
+            DB::commit(); // トランザクションコミット
+
+            // JSONレスポンスとしてidを返す
+            return response()->json(['id' => $newId]);
+
+        } catch (\Exception $e) {// エラーが発生した場合の処理
+            DB::rollBack(); // トランザクションロールバック
+
+            // エラーメッセージを返す
+            return response()->json(['error' => 'store error!'], 500);
+        }
     }
 
     /**
@@ -68,11 +79,23 @@ class PlayersController extends Controller
      */
     public function update(Request $request, $id)
     {
-        Player::Where('id',$id) // 指定したIDに一致するプレイヤーを検索
-        ->update($request->all());   // 送られてきたデータに沿って指定されたIDのカラムを更新
+        DB::beginTransaction(); // トランザクション開始
 
-        // UP DATEが完了したらJSONレスポンスを返す
-        return response()->json(['update complete.']);
+        try {// エラーが発生すればcatchへ
+            Player::Where('id',$id) // 指定したIDに一致するプレイヤーを検索
+            ->update($request->all());   // 送られてきたデータに沿って指定されたIDのカラムを更新
+
+            DB::commit(); // トランザクションコミット
+
+            // UP DATEが完了したらJSONレスポンスを返す
+            return response()->json(['update complete.']);
+
+        } catch (\Exception $e) {// エラーが発生した場合の処理
+            DB::rollBack(); // トランザクションロールバック
+
+            // エラーメッセージを返す
+            return response()->json(['error' => 'update error!'], 500);
+        }
     }
 
     /**
@@ -83,11 +106,26 @@ class PlayersController extends Controller
      */
     public function destroy($id)
     {
-        Player::where('id',$id) // 指定したIDに一致するプレイヤーを検索
-        ->delete(); // 削除
 
-        // DELETEが完了したらJSONレスポンスを返す
-        return response()->json(['delete complete.']);
+
+
+
+        try {// エラーが発生すればcatchへ
+            Player::where('id',$id) // 指定したIDに一致するプレイヤーを検索
+            ->delete(); // 削除
+
+            DB::commit(); // トランザクションコミット
+
+            // DELETEが完了したらJSONレスポンスを返す
+            return response()->json(['delete complete.']);
+
+        } catch (\Exception $e) {// エラーが発生した場合の処理
+            DB::rollBack(); // トランザクションロールバック
+
+            // エラーメッセージを返す
+            return response()->json(['error' => 'delete error!'], 500);
+        }
+        
     }
 
     /**
