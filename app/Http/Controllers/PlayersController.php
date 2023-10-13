@@ -66,7 +66,7 @@ class PlayersController extends Controller
             DB::rollBack(); // トランザクションロールバック
 
             // エラーメッセージを返す
-            return response()->json(['error' => 'store error!'], 500);
+            return response()->json(['error' => 'store error!'], 400);
         }
     }
 
@@ -94,7 +94,7 @@ class PlayersController extends Controller
             DB::rollBack(); // トランザクションロールバック
 
             // エラーメッセージを返す
-            return response()->json(['error' => 'update error!'], 500);
+            return response()->json(['error' => 'update error!'], 400);
         }
     }
 
@@ -123,7 +123,7 @@ class PlayersController extends Controller
             DB::rollBack(); // トランザクションロールバック
 
             // エラーメッセージを返す
-            return response()->json(['error' => 'delete error!'], 500);
+            return response()->json(['error' => 'delete error!'], 400);
         }
         
     }
