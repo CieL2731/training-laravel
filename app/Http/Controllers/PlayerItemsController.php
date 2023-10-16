@@ -11,6 +11,7 @@ use App\Models\PlayerItems;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PlayerItemsController extends Controller
 {
@@ -27,37 +28,50 @@ class PlayerItemsController extends Controller
         $itemId = $request->input('itemId');
         $count = $request->input('count');
 
-        // プレイヤーIDからプレイヤーを取得
-        $player = Player::find($id);
+        DB::beginTransaction(); // トランザクション開始
 
-        // アイテムIDからアイテムを取得
-        $item = Item::find($itemId);
+        try {// エラーが発生すればcatchへ
+            // プレイヤーIDからプレイヤーを取得
+            $player = Player::find($id);
 
-        // PlayerItemsテーブルから対応するデータを取得
-        $playerItem = PlayerItems::where('player_id', $player->id)
-            ->where('item_id', $item->id)
-            ->first();
+            // アイテムIDからアイテムを取得
+            $item = Item::find($itemId);
 
-        // データが存在するかどうかを確認し、カラムを追加または更新
-        if ($playerItem) {
-            // プレイヤーIDとアイテムIDを参照し、item_countを加算
-            PlayerItems::where('player_id', $player->id)
-            ->where('item_id', $item->id)
-            ->update(['item_count'=>$playerItem->item_count + $count]);
+            // PlayerItemsテーブルから対応するデータを取得
+            $playerItem = PlayerItems::where('player_id', $player->id)
+                ->where('item_id', $item->id)
+                ->first();
 
-            // アイテムIDと所持数が加算後のレスポンスを返す
-            return response()->json(['itemId' => $itemId, 'count' => $playerItem->item_count + $count]);
-        } 
-        else {
-            // データが存在しない場合、新しいカラムを作成
-            PlayerItems::insert([
-                'player_id'=>$id,
-                'item_id'=>$itemId,
-                'item_count'=>$count
-            ]);
+            // データが存在するかどうかを確認し、カラムを追加または更新
+            if ($playerItem) {
+                // プレイヤーIDとアイテムIDを参照し、item_countを加算
+                PlayerItems::where('player_id', $player->id)
+                ->where('item_id', $item->id)
+                ->update(['item_count'=>$playerItem->item_count + $count]);
 
-            // 追加されたアイテムID、所持数のレスポンスを返す
-            return response()->json(['itemId' => $itemId, 'count' => $count]);
+                DB::commit(); // トランザクションコミット
+                
+                // アイテムIDと所持数が加算後のレスポンスを返す
+                return response()->json(['itemId' => $itemId, 'count' => $playerItem->item_count + $count]);
+            } 
+            else {
+                // データが存在しない場合、新しいカラムを作成
+                PlayerItems::insert([
+                    'player_id'=>$id,
+                    'item_id'=>$itemId,
+                    'item_count'=>$count
+                ]);
+
+                DB::commit(); // トランザクションコミット
+
+                // 追加されたアイテムID、所持数のレスポンスを返す
+                return response()->json(['itemId' => $itemId, 'count' => $count]);
+            }
+        } catch (\Exception $e) {// エラーが発生した場合の処理
+            DB::rollBack(); // トランザクションロールバック
+
+            // エラーメッセージを返す
+            return response()->json(['error' => 'add_item error!'], 400);
         }
     }
 
