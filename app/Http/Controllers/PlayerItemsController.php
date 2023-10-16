@@ -274,8 +274,6 @@ class PlayerItemsController extends Controller
                         PlayerItems::where('player_id', $player->id)
                         ->where('item_id', $item->id)
                         ->update(['item_count'=>$playerItem->item_count + 1]);
-
-                        DB::commit(); // トランザクションコミット
                     }
                     else{
                         // 選択されたアイテムを未所持の場合はカラムを作成
@@ -284,8 +282,6 @@ class PlayerItemsController extends Controller
                              'item_id'=>$item->id,
                              'item_count'=>1
                             ]);
-
-                            DB::commit(); // トランザクションコミット
                         }
                 }
             }
