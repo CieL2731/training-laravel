@@ -49,6 +49,8 @@ class PlayerItemsController extends Controller
                 ->where('item_id', $item->id)
                 ->update(['item_count'=>$playerItem->item_count + $count]);
 
+                DB::commit(); // トランザクションコミット
+                
                 // アイテムIDと所持数が加算後のレスポンスを返す
                 return response()->json(['itemId' => $itemId, 'count' => $playerItem->item_count + $count]);
             } 
@@ -61,7 +63,7 @@ class PlayerItemsController extends Controller
                 ]);
 
                 DB::commit(); // トランザクションコミット
-                
+
                 // 追加されたアイテムID、所持数のレスポンスを返す
                 return response()->json(['itemId' => $itemId, 'count' => $count]);
             }
