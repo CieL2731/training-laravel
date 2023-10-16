@@ -11,6 +11,7 @@ use App\Models\PlayerItems;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PlayerItemsController extends Controller
 {
@@ -59,6 +60,8 @@ class PlayerItemsController extends Controller
                     'item_count'=>$count
                 ]);
 
+                DB::commit(); // トランザクションコミット
+                
                 // 追加されたアイテムID、所持数のレスポンスを返す
                 return response()->json(['itemId' => $itemId, 'count' => $count]);
             }
