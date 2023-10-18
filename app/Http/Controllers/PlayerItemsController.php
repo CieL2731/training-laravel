@@ -115,7 +115,7 @@ class PlayerItemsController extends Controller
                 }
 
                 $curehp = 200 - $player->hp; // 回復できる量を計算
-                $usecount = min($count, floor($curehp / $item->value)); // 回復できる量から使用回数を計算
+                $usecount = min($count, ceil($curehp / $item->value)); // 回復できる量から使用回数を計算
 
                 // アイテムIDが1の時はhpに加算
                 $player->hp += $item->value * $usecount;
@@ -133,7 +133,7 @@ class PlayerItemsController extends Controller
                 }
 
                 $curemp = 200 - $player->mp; // 回復できる量を計算
-                $usecount = min($count, floor($curemp / $item->value)); // 回復できる量から使用回数を計算
+                $usecount = min($count, ceil($curemp / $item->value)); // 回復できる量から使用回数を計算
             
                 // アイテムIDが2の時はmpに加算
                 $player->mp += $item->value * $usecount;
