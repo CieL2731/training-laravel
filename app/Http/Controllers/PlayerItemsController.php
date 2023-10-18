@@ -98,10 +98,14 @@ class PlayerItemsController extends Controller
                 ->first();
     
             // プレイヤーIDからプレイヤーを取得
-            $player = Player::find($id);
+            $player = Player::where('id',$id)
+                ->lockForUpdate()
+                ->first();
 
             // アイテムIDからアイテムを取得
-            $item = Item::find($itemId);
+            $item = Item::where('id',$itemId)
+                ->lockForUpdate()
+                ->first();
 
             // データがないか、アイテムを所持していない場合、エラーレスポンスを返す
             if (!$playerItem || $playerItem->item_count <= 0) {
