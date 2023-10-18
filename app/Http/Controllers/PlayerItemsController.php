@@ -91,16 +91,17 @@ class PlayerItemsController extends Controller
         DB::beginTransaction(); // トランザクション開始
 
         try {// エラーが発生すればcatchへ
+            // PlayerItemsテーブルから対応するデータを取得
+            $playerItem = PlayerItems::where('player_id', $id)
+                ->where('item_id', $itemId)
+                ->lockForUpdate()
+                ->first();
+    
             // プレイヤーIDからプレイヤーを取得
             $player = Player::find($id);
 
             // アイテムIDからアイテムを取得
             $item = Item::find($itemId);
-
-            // PlayerItemsテーブルから対応するデータを取得
-            $playerItem = PlayerItems::where('player_id', $player->id)
-                ->where('item_id', $item->id)
-                ->first();
 
             // データがないか、アイテムを所持していない場合、エラーレスポンスを返す
             if (!$playerItem || $playerItem->item_count <= 0) {
@@ -113,27 +114,15 @@ class PlayerItemsController extends Controller
                     return response()->json(['HPが満タンです！'], 200);
                 }
 
-                // 上限以上回復しようとした場合使用個数を補正
-                $nowhp = $player->hp;   // 現在のHPを取得
-                $curehp = 200 - $nowhp; // 回復できる量を取得
-                for($usecount = 1; $usecount<$count; $usecount++){
-                    // 回復できる量に対して使える最大数を取得 
-                    $curehp = $curehp - $item->value;
-                    if($curehp <= 0){
-                        // 使える最大数になったらループを抜ける
-                        break;
-                    }
-                }
+                $curehp = 200 - $player->hp; // 回復できる量を計算
+                $usecount = min($count, floor($curehp / $item->value)); // 回復できる量から使用回数を計算
 
                 // アイテムIDが1の時はhpに加算
-                $player->hp += $item->value * $usecount;    // プレイヤーのhpにitemのvalue*count分加算
-                $player->save(); // プレイヤーの変更を保存
+                $player->hp += $item->value * $usecount;
 
                 // 200を越えた場合上限値200に補正
-                if($player->hp >= 200)
-                {
+                if($player->hp >= 200){
                     $player->hp = 200;
-                    $player->save(); // プレイヤーの変更を保存
                 }
 
             }
@@ -143,35 +132,24 @@ class PlayerItemsController extends Controller
                     return response()->json(['MPが満タンです！'], 200);
                 }
 
-                // 上限以上回復しようとした場合使用個数を補正
-                $nowmp = $player->mp;   // 現在のHPを取得
-                $curemp = 200 - $nowmp; // 回復できる量を取得
-                for($usecount = 1; $usecount<$count; $usecount++){
-                    // 回復できる量に対して使える最大数を取得 
-                    $curemp = $curemp - $item->value;
-                    if($curemp <= 0){
-                        // 使える最大数になったらループを抜ける
-                        break;
-                        }
-                }
-
+                $curemp = 200 - $player->mp; // 回復できる量を計算
+                $usecount = min($count, floor($curemp / $item->value)); // 回復できる量から使用回数を計算
+            
                 // アイテムIDが2の時はmpに加算
-                $player->mp += $item->value * $usecount;    // プレイヤーのmpにitemのvalue*count分加算
-                $player->save(); // プレイヤーの変更を保存
+                $player->mp += $item->value * $usecount;
 
                 // 200を越えた場合上限値200に補正
-                if($player->mp >= 200)
-                {   
+                if($player->mp >= 200){   
                     $player->mp = 200;
-                    $player->save(); // プレイヤーの変更を保存
                 }
 
             }
-
+            
             // 使用したアイテムの個数分item_countを減算
-            PlayerItems::where('player_id', $player->id)
-            ->where('item_id', $item->id)
+            PlayerItems::where('player_id', $id)
+            ->where('item_id', $itemId)
             ->update(['item_count'=>$playerItem->item_count - $usecount]);
+            $player->save(); // プレイヤーの変更を保存
 
             DB::commit(); // トランザクションコミット
             
